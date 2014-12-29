@@ -5,9 +5,9 @@ GO
 -- =============================================
 -- Author:		MikeSamuels
 -- Create date: 11/29/2014
--- Description:	Get User Info
+-- Description:	Get Masseur Info
 -- =============================================
-CREATE PROCEDURE uspUserGet 
+CREATE PROCEDURE uspMasseurGet 
 	-- Add the parameters for the stored procedure here
 	@name varchar(100) = null
 AS
