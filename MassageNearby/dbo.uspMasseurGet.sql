@@ -23,7 +23,8 @@ ALTER PROCEDURE uspMasseurGet
 	-- Add the parameters for the stored procedure here
 	@name varchar(100) = null,
 	@url varchar(255) = null,
-	@masseurId int = null
+	@masseurId int = null,
+	@password varchar(50)=null
 AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
@@ -32,8 +33,8 @@ BEGIN
 	declare @userid int
 	if @name is not null begin
 		if exists (select * from [User] where name=@name) begin
-			if @url is not null begin
-				update [User] set url=@url where [name]=@name
+			if @url is not null or @Password is not null begin
+				update [User] set url=isnull(@url,url), [password]=isnull(@password,[password]) where [name]=@name
 				update m
 				set m.IsOnline = 1
 				from [User] u inner join Masseur m on m.Userid=u.UserId
@@ -41,12 +42,14 @@ BEGIN
 			end
 		end else begin
 			insert into [user]
-			select @name,@url
+			select @name,@url,@password
 			select @userid=scope_identity()
 			insert into masseur (UserId,IsOnline)
 			select @userid,1
 		end
-		SELECT u.UserId,m.MasseurId,IsOnline,[Name],URL,MainPictureURL, CertifiedPictureURL, m.Longitude, m.Latitude
+		SELECT u.UserId,m.MasseurId,IsOnline,[Name],URL,MainPictureURL, CertifiedPictureURL, m.Longitude, m.Latitude,
+				m.Birthdate, m.Height, m.Ethnicity, m.[Services], m.Bio, m.SubscriptionEndDate,
+				m.PrivatePicture1URL,m.PrivatePicture2URL,m.PrivatePicture3URL,m.PrivatePicture4URL,m.IsCertified, m.CertificationNumber, u.[Password]
 		FROM Masseur m Inner Join [User] u ON u.UserId=m.UserId
 		where ([Name]=@name)
 
@@ -57,7 +60,9 @@ BEGIN
 			from [User] u inner join Masseur m on m.Userid=u.UserId
 			where masseurid=@masseurid
 		end
-		SELECT u.UserId,m.MasseurId,IsOnline,[Name],URL,MainPictureURL, CertifiedPictureURL, Longitude, Latitude
+		SELECT u.UserId,m.MasseurId,IsOnline,[Name],URL,MainPictureURL, CertifiedPictureURL, Longitude, Latitude,
+				m.Birthdate, m.Height, m.Ethnicity, m.[Services], m.Bio, m.SubscriptionEndDate,
+				m.PrivatePicture1URL,m.PrivatePicture2URL,m.PrivatePicture3URL,m.PrivatePicture4URL,m.IsCertified, m.CertificationNumber, u.[Password]
 		FROM Masseur m Inner Join [User] u ON u.UserId=m.UserId
 		where (@name is null or [Name]=@name)
 	end 
