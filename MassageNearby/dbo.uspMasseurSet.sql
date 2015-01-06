@@ -35,7 +35,8 @@ alter PROCEDURE uspMasseurSet
 		@PrivatePicture2URL varchar(256)=null,
 		@PrivatePicture3URL varchar(256)=null,
 		@PrivatePicture4URL varchar(256)=null,
-	@Password varchar(50)=null
+	@Password varchar(50)=null,
+	@Email varchar(255)=null
 AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
@@ -43,7 +44,7 @@ BEGIN
 	SET NOCOUNT ON;
 	if exists (select * from Masseur m INNER JOIN [User] u on m.UserId=u.UserId where u.UserID=@UserId) begin
 		update u
-		set Name=isnull(@Name,Name),[Password]=isnull(@Password,[Password])
+		set Name=isnull(@Name,Name),[Password]=isnull(@Password,[Password]), email=isnull(@email,email)
 		from [User] u inner join Masseur m on m.UserId=u.UserId
 		where u.UserId=@UserId
 		update m
@@ -67,7 +68,7 @@ BEGIN
 
 		SELECT u.UserId,m.MasseurId,IsOnline,[Name],URL,MainPictureURL, CertifiedPictureURL,Latitude,Longitude,
 				m.Birthdate, m.Height, m.Ethnicity, m.[Services], m.Bio, m.SubscriptionEndDate,
-				m.PrivatePicture1URL,m.PrivatePicture2URL,m.PrivatePicture3URL,m.PrivatePicture4URL,m.IsCertified, m.CertificationNumber,u.[password]
+				m.PrivatePicture1URL,m.PrivatePicture2URL,m.PrivatePicture3URL,m.PrivatePicture4URL,m.IsCertified, m.CertificationNumber,u.[password],u.email
 		FROM Masseur m Inner Join [User] u ON u.UserId=m.UserId
 		where m.UserId=@UserId
 	end
