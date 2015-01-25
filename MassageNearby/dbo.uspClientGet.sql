@@ -18,10 +18,13 @@ delete from [user]
 
 */
 -- =============================================
-create PROCEDURE uspClientGet 
+alter PROCEDURE uspClientGet 
 	@name varchar(100) = null,
 	@url varchar(255) = null,
-	@clientId int = null
+	@clientId int = null,
+	@password varchar(50)=null,
+	@email varchar(255)=null,
+	@port int = null
 AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
@@ -30,23 +33,14 @@ BEGIN
 	declare @userid int
 	if @name is not null begin
 		if exists (select * from [User] where name=@name) begin
-			if @url is not null begin
-				update [User] set url=@url where [name]=@name
+			if @url is not null or @email is not null or @password is not null or @port is not null begin
+				update [User] set port=isnull(@port,port), url=isnull(@url,url), email=isnull(@email,email), [Password]=isnull(@password,[password]) where [name]=@name
 				update c
 				/*gotta put something here*/ set c.UserId=u.UserId
 				from [User] u inner join Client c on c.Userid=c.UserId
 				where [name]=@name
 			end
-		end else begin
-			insert into [user]
-			select @name,@url
-			select @userid=scope_identity()
-			insert into client
-			select @userid
-		end
-		SELECT u.UserId,c.ClientId,[Name],URL
-		FROM Client c Inner Join [User] u ON u.UserId=c.UserId
-		where ([Name]=@name)
+		end 
 
 	end else begin
 		if @clientid is not null begin
@@ -55,12 +49,10 @@ BEGIN
 			from [User] u inner join Client c on c.Userid=u.UserId
 			where clientId=@clientid
 		end
-		SELECT u.UserId,c.ClientId,[Name],URL
-		FROM Client c Inner Join [User] u ON u.UserId=c.UserId
-		where (@name is null or [Name]=@name)
 	end 
-
-
+	SELECT u.UserId,c.ClientId,[Name],URL,[Password],Email,Port
+	FROM Client c Inner Join [User] u ON u.UserId=c.UserId
+	where (@name is null or [Name]=@name)
 
 END
 GO

@@ -9,7 +9,7 @@ GO
 /*
 EXEC uspMasseurGet
 fe80::cc3a:61ff:fe02:d1ac%p2p0
-EXEC uspMasseurGet @Name='Fred', @url='10.10.10.332'
+EXEC uspMasseurGet @Name='m', @url='10.10.10.332'
 EXEC uspMasseurGet @MasseurId=41
 
 
@@ -22,9 +22,11 @@ delete from [user]
 ALTER PROCEDURE uspMasseurGet 
 	-- Add the parameters for the stored procedure here
 	@name varchar(100) = null,
-	@url varchar(255) = null,
 	@masseurId int = null,
-	@password varchar(50)=null
+	@password varchar(50)=null,
+	@email varchar(255) = null,
+	@isDoingLogin bit = null,
+	@port int=null
 AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
@@ -32,37 +34,37 @@ BEGIN
 	SET NOCOUNT ON;
 	declare @userid int
 	if @name is not null begin
-		if exists (select * from [User] where name=@name) begin
-			if @url is not null or @Password is not null begin
-				update [User] set url=isnull(@url,url), [password]=isnull(@password,[password]) where [name]=@name
-				update m
-				set m.IsOnline = 1
-				from [User] u inner join Masseur m on m.Userid=u.UserId
-				where [name]=@name
+		if @isDoingLogin is null or @isDoingLogin!=1 begin
+			if exists (select * from [User] where name=@name) begin
+					if @Password is not null begin
+						update [User] set [password]=isnull(@password,[password]), email=isnull(@email,email) where [name]=@name
+					end
+			end else begin
+				insert into [user]
+				select @name,null,@password,@email,null
+				select @userid=scope_identity()
+				insert into masseur (UserId)
+				select @userid
 			end
-		end else begin
-			insert into [user]
-			select @name,@url,@password
-			select @userid=scope_identity()
-			insert into masseur (UserId,IsOnline)
-			select @userid,1
 		end
-		SELECT u.UserId,m.MasseurId,IsOnline,[Name],URL,MainPictureURL, CertifiedPictureURL, m.Longitude, m.Latitude,
+		SELECT u.UserId,m.MasseurId, case when u.Port is not null and u.URL is not null then 1 else 0 end,[Name],URL,MainPictureURL, CertifiedPictureURL, m.Longitude, m.Latitude,
 				m.Birthdate, m.Height, m.Ethnicity, m.[Services], m.Bio, m.SubscriptionEndDate,
-				m.PrivatePicture1URL,m.PrivatePicture2URL,m.PrivatePicture3URL,m.PrivatePicture4URL,m.IsCertified, m.CertificationNumber, u.[Password]
+				m.PrivatePicture1URL,m.PrivatePicture2URL,m.PrivatePicture3URL,m.PrivatePicture4URL,m.IsCertified, m.CertificationNumber, u.[Password], u.email,
+				u.Port,m.IsOnline
 		FROM Masseur m Inner Join [User] u ON u.UserId=m.UserId
 		where ([Name]=@name)
 
 	end else begin
 		if @masseurid is not null begin
-			update m
-			set m.IsOnline = 0
+			update u
+			set u.Port=null, u.URL=null
 			from [User] u inner join Masseur m on m.Userid=u.UserId
 			where masseurid=@masseurid
 		end
-		SELECT u.UserId,m.MasseurId,IsOnline,[Name],URL,MainPictureURL, CertifiedPictureURL, Longitude, Latitude,
+		SELECT u.UserId,m.MasseurId, case when u.Port is not null and u.URL is not null then 1 else 0 end,[Name],URL,MainPictureURL, CertifiedPictureURL, Longitude, Latitude,
 				m.Birthdate, m.Height, m.Ethnicity, m.[Services], m.Bio, m.SubscriptionEndDate,
-				m.PrivatePicture1URL,m.PrivatePicture2URL,m.PrivatePicture3URL,m.PrivatePicture4URL,m.IsCertified, m.CertificationNumber, u.[Password]
+				m.PrivatePicture1URL,m.PrivatePicture2URL,m.PrivatePicture3URL,m.PrivatePicture4URL,m.IsCertified, m.CertificationNumber, u.[Password], u.email,
+				u.Port,m.IsOnline
 		FROM Masseur m Inner Join [User] u ON u.UserId=m.UserId
 		where (@name is null or [Name]=@name)
 	end 
